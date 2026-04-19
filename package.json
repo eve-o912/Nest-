@@ -1,0 +1,14 @@
+{
+  "name": "nest-financial-os",
+  "version": "1.0.0",
+  "description": "Financial operating system for informal businesses",
+  "private": true,
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:mobile": "cd mobile && npm start",
+    "dev:receipt": "cd receipt-web && npm run dev",
+    "db:migrate": "cd backend && npm run migrate",
+    "db:rollback": "cd backend && npm run rollback",
+    "db:seed": "cd backend && npm run seed"
+  }
+}
