@@ -12,6 +12,14 @@ dotenv.config();
 // Import routes
 import authRoutes from './routes/auth.routes';
 import businessRoutes from './routes/business.routes';
+import productsRoutes from './routes/products.routes';
+import transactionsRoutes from './routes/transactions.routes';
+import expensesRoutes from './routes/expenses.routes';
+import shiftsRoutes from './routes/shifts.routes';
+import savingsRoutes from './routes/savings.routes';
+import pnlRoutes from './routes/pnl.routes';
+import scoringRoutes from './routes/scoring.routes';
+import passportRoutes from './routes/passport.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -107,6 +115,14 @@ app.use(`${API_PREFIX}/auth/otp`, authLimiter);
 // Routes
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/businesses`, businessRoutes);
+app.use(`${API_PREFIX}/businesses`, productsRoutes);
+app.use(`${API_PREFIX}/businesses`, transactionsRoutes);
+app.use(`${API_PREFIX}/businesses`, expensesRoutes);
+app.use(`${API_PREFIX}/businesses`, shiftsRoutes);
+app.use(`${API_PREFIX}/businesses`, savingsRoutes);
+app.use(`${API_PREFIX}/businesses`, pnlRoutes);
+app.use(`${API_PREFIX}/businesses`, scoringRoutes);
+app.use(`${API_PREFIX}/businesses`, passportRoutes);
 
 // 404 handler
 app.use((req, res) => {

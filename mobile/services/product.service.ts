@@ -8,43 +8,60 @@ export interface CreateProductRequest {
   description?: string;
   unit?: string;
   sellingPrice: number;
-  costPrice?: number;
+  costPrice: number;
   stockQty?: number;
   reorderLevel?: number;
   barcode?: string;
 }
 
 export const productService = {
-  // Get all products
-  getAll: async (params?: { category?: string; search?: string }): Promise<ApiResponse<{ products: Product[] }>> => {
-    return api.get('/products', { params });
+  // Get all products for a business
+  getAll: async (businessId: string, params?: { category?: string; lowStock?: boolean; isActive?: boolean }): Promise<{ products: Product[] }> => {
+    return api.get(`/businesses/${businessId}/products`, { params });
+  },
+
+  // Search products
+  search: async (businessId: string, query: string): Promise<{ products: Product[] }> => {
+    return api.get(`/businesses/${businessId}/products/search`, { params: { q: query } });
+  },
+
+  // Get low stock products
+  getLowStock: async (businessId: string): Promise<{ products: Product[] }> => {
+    return api.get(`/businesses/${businessId}/products/low-stock`);
   },
 
   // Get single product
-  getById: async (id: string): Promise<ApiResponse<{ product: Product }>> => {
-    return api.get(`/products/${id}`);
+  getById: async (businessId: string, productId: string): Promise<{ product: Product }> => {
+    return api.get(`/businesses/${businessId}/products/${productId}`);
   },
 
-  // Create product
-  create: async (data: CreateProductRequest): Promise<ApiResponse<{ product: Product }>> => {
-    return api.post('/products', data);
+  // Create product (owner only)
+  create: async (businessId: string, data: CreateProductRequest): Promise<{ product: Product }> => {
+    return api.post(`/businesses/${businessId}/products`, data);
   },
 
-  // Update product
-  update: async (id: string, data: Partial<CreateProductRequest>): Promise<ApiResponse<{ product: Product }>> => {
-    return api.put(`/products/${id}`, data);
+  // Update product (owner only)
+  update: async (businessId: string, productId: string, data: Partial<CreateProductRequest> & { isActive?: boolean }): Promise<{ product: Product }> => {
+    return api.put(`/businesses/${businessId}/products/${productId}`, data);
   },
 
-  // Stock operations
-  receiveStock: async (productId: string, quantity: number, unitCost?: number, supplierName?: string): Promise<ApiResponse<any>> => {
-    return api.post('/stock/receive', { productId, quantity, unitCost, supplierName });
+  // Delete product (owner only)
+  delete: async (businessId: string, productId: string): Promise<{ message: string }> => {
+    return api.delete(`/businesses/${businessId}/products/${productId}`);
   },
 
-  adjustStock: async (productId: string, quantity: number, reason: string, notes?: string): Promise<ApiResponse<any>> => {
-    return api.post('/stock/adjust', { productId, quantity, reason, notes });
+  // Receive stock
+  receiveStock: async (businessId: string, productId: string, quantity: number, unitCost?: number): Promise<{ product: Product }> => {
+    return api.post(`/businesses/${businessId}/products/${productId}/receive`, { quantity, unitCost });
   },
 
-  countStock: async (counts: Array<{ productId: string; countedQty: number; notes?: string }>): Promise<ApiResponse<any>> => {
-    return api.post('/stock/count', { counts });
+  // Adjust stock
+  adjustStock: async (businessId: string, productId: string, quantity: number, reason: string, notes?: string): Promise<{ product: Product }> => {
+    return api.post(`/businesses/${businessId}/products/${productId}/adjust`, { quantity, reason, notes });
+  },
+
+  // Get stock history
+  getStockHistory: async (businessId: string, productId: string): Promise<{ history: any[] }> => {
+    return api.get(`/businesses/${businessId}/products/${productId}/history`);
   },
 };
