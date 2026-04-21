@@ -27,6 +27,14 @@ export default function ExpensesScreen() {
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [isRecurringModalVisible, setIsRecurringModalVisible] = useState(false);
+  const [isAnomaliesModalVisible, setIsAnomaliesModalVisible] = useState(false);
+  
+  // Anomalies & recurring
+  const [anomalies, setAnomalies] = useState<any[]>([]);
+  const [recurringExpenses, setRecurringExpenses] = useState<any[]>([]);
+  const [receiptPhoto, setReceiptPhoto] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'expenses' | 'recurring'>('expenses');
   
   // Form state
   const [formData, setFormData] = useState<Partial<CreateExpenseRequest>>({
@@ -70,7 +78,55 @@ export default function ExpensesScreen() {
 
   useEffect(() => {
     loadData();
+    loadAnomalies();
+    loadRecurring();
   }, [loadData]);
+
+  // Load expense anomalies
+  const loadAnomalies = useCallback(async () => {
+    if (!currentBusiness?.id) return;
+    try {
+      const from = new Date();
+      from.setDate(from.getDate() - 30);
+      const response = await expenseService.getAnomalies(currentBusiness.id, {
+        from: from.toISOString().split('T')[0],
+      });
+      setAnomalies(response.anomalies?.filter(a => !a.isAcknowledged) || []);
+    } catch (err: any) {
+      console.error('Failed to load anomalies:', err);
+    }
+  }, [currentBusiness?.id]);
+
+  // Load recurring expenses
+  const loadRecurring = useCallback(async () => {
+    if (!currentBusiness?.id) return;
+    try {
+      const response = await expenseService.getRecurring(currentBusiness.id);
+      setRecurringExpenses(response.recurring || []);
+    } catch (err: any) {
+      console.error('Failed to load recurring:', err);
+    }
+  }, [currentBusiness?.id]);
+
+  // Handle receipt photo capture
+  const handleCaptureReceipt = async () => {
+    // Note: This requires expo-image-picker to be installed
+    // For now, we'll simulate with a placeholder
+    Alert.alert('Receipt Capture', 'Photo capture would open here with expo-image-picker');
+    // setReceiptPhoto('captured-photo-uri');
+  };
+
+  // Upload receipt for expense
+  const handleUploadReceipt = async (expenseId: string) => {
+    if (!currentBusiness?.id || !receiptPhoto) return;
+    try {
+      await expenseService.uploadReceipt(currentBusiness.id, expenseId, receiptPhoto);
+      setReceiptPhoto(null);
+      Alert.alert('Success', 'Receipt uploaded successfully');
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to upload receipt');
+    }
+  };
 
   const handleAddExpense = async () => {
     if (!currentBusiness?.id) return;
@@ -199,6 +255,38 @@ export default function ExpensesScreen() {
         <Text style={styles.headerTitle}>Expenses</Text>
         <TouchableOpacity style={styles.addButton} onPress={() => setIsAddModalVisible(true)}>
           <Text style={styles.addButtonText}>+ Add</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Anomalies Alert */}
+      {anomalies.length > 0 && (
+        <TouchableOpacity 
+          style={styles.anomalyBanner}
+          onPress={() => setIsAnomaliesModalVisible(true)}
+        >
+          <Text style={styles.anomalyTitle}>⚠️ Unusual Expense Detected</Text>
+          <Text style={styles.anomalyText}>
+            {anomalies.length} expense{anomalies.length > 1 ? 's' : ''} higher than 30-day baseline
+          </Text>
+          <Text style={styles.anomalySubtext}>Tap to review</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Quick Actions */}
+      <View style={styles.quickActions}>
+        <TouchableOpacity 
+          style={styles.actionChip}
+          onPress={() => setIsRecurringModalVisible(true)}
+        >
+          <Text style={styles.actionChipIcon}>🔄</Text>
+          <Text style={styles.actionChipText}>Recurring ({recurringExpenses.length})</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.actionChip}
+          onPress={() => setIsAnomaliesModalVisible(true)}
+        >
+          <Text style={styles.actionChipIcon}>🔍</Text>
+          <Text style={styles.actionChipText}>Anomalies ({anomalies.length})</Text>
         </TouchableOpacity>
       </View>
 
@@ -347,6 +435,23 @@ export default function ExpensesScreen() {
               </View>
             )}
             
+            {/* Receipt Photo Capture */}
+            <View style={styles.receiptSection}>
+              <Text style={styles.formLabel}>Receipt Photo (optional)</Text>
+              <TouchableOpacity 
+                style={styles.receiptButton}
+                onPress={handleCaptureReceipt}
+              >
+                <Text style={styles.receiptButtonIcon}>📷</Text>
+                <Text style={styles.receiptButtonText}>
+                  {receiptPhoto ? 'Photo captured ✓' : 'Take photo of receipt'}
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.receiptHint}>
+                Photos stored securely on Cloudflare R2
+              </Text>
+            </View>
+            
             <TouchableOpacity 
               style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
               onPress={handleAddExpense}
@@ -358,6 +463,112 @@ export default function ExpensesScreen() {
                 <Text style={styles.submitButtonText}>Save Expense</Text>
               )}
             </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Anomalies Modal */}
+      <Modal
+        visible={isAnomaliesModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsAnomaliesModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Expense Anomalies</Text>
+            <TouchableOpacity onPress={() => setIsAnomaliesModalVisible(false)}>
+              <Text style={styles.closeButton}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.modalContent}>
+            <Text style={styles.anomalyInfo}>
+              AI-detected expenses that are unusually high compared to your 30-day baseline.
+            </Text>
+            
+            {anomalies.length === 0 ? (
+              <Text style={styles.emptyText}>No unacknowledged anomalies</Text>
+            ) : (
+              anomalies.map((anomaly) => (
+                <View key={anomaly.id} style={styles.anomalyCard}>
+                  <View style={styles.anomalyHeader}>
+                    <Text style={styles.anomalyCategory}>{anomaly.category}</Text>
+                    <View style={[styles.severityBadge, 
+                      anomaly.severity === 'high' ? styles.severityHigh :
+                      anomaly.severity === 'medium' ? styles.severityMedium :
+                      styles.severityLow
+                    ]}>
+                      <Text style={styles.severityText}>{anomaly.severity}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.anomalyAmount}>
+                    KES {anomaly.amount.toLocaleString()}
+                  </Text>
+                  <Text style={styles.anomalyExpected}>
+                    Expected range: KES {anomaly.expectedRange.min.toLocaleString()} - {anomaly.expectedRange.max.toLocaleString()}
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.acknowledgeButton}
+                    onPress={async () => {
+                      if (currentBusiness?.id) {
+                        await expenseService.acknowledgeAnomaly(currentBusiness.id, anomaly.id);
+                        loadAnomalies();
+                      }
+                    }}
+                  >
+                    <Text style={styles.acknowledgeButtonText}>Acknowledge</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Recurring Expenses Modal */}
+      <Modal
+        visible={isRecurringModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsRecurringModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Recurring Expenses</Text>
+            <TouchableOpacity onPress={() => setIsRecurringModalVisible(false)}>
+              <Text style={styles.closeButton}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.modalContent}>
+            <Text style={styles.recurringInfo}>
+              Set up automatic expense generation for rent, salaries, and other regular payments.
+            </Text>
+            
+            {recurringExpenses.length === 0 ? (
+              <Text style={styles.emptyText}>No recurring expenses set up</Text>
+            ) : (
+              recurringExpenses.map((item) => (
+                <View key={item.id} style={styles.recurringCard}>
+                  <View style={styles.recurringHeader}>
+                    <Text style={styles.recurringCategory}>{item.category}</Text>
+                    <View style={[styles.statusBadge, item.isActive ? styles.statusActive : styles.statusInactive]}>
+                      <Text style={styles.statusText}>{item.isActive ? 'Active' : 'Paused'}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.recurringAmount}>
+                    KES {item.amount.toLocaleString()} / {item.frequency}
+                  </Text>
+                  {item.description && (
+                    <Text style={styles.recurringDescription}>{item.description}</Text>
+                  )}
+                  <Text style={styles.recurringNext}>
+                    Next: {new Date(item.nextRunDate).toLocaleDateString('en-KE')}
+                  </Text>
+                </View>
+              ))
+            )}
           </ScrollView>
         </View>
       </Modal>
@@ -689,5 +900,211 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: Typography.sizes.lg,
     fontWeight: '600',
+  },
+  // Quick Actions
+  quickActions: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  actionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  actionChipIcon: {
+    fontSize: 16,
+  },
+  actionChipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.text,
+    fontWeight: '500',
+  },
+  // Anomaly Banner
+  anomalyBanner: {
+    backgroundColor: Colors.error + '15',
+    margin: Spacing.lg,
+    marginBottom: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.error,
+  },
+  anomalyTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: 'bold',
+    color: Colors.error,
+  },
+  anomalyText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.text,
+    marginTop: Spacing.xs,
+  },
+  anomalySubtext: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textLight,
+    marginTop: Spacing.xs,
+  },
+  // Modal Content
+  modalContent: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  anomalyInfo: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginBottom: Spacing.md,
+    lineHeight: 20,
+  },
+  anomalyCard: {
+    backgroundColor: Colors.white,
+    padding: Spacing.md,
+    borderRadius: 12,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  anomalyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  anomalyCategory: {
+    fontSize: Typography.sizes.md,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  anomalyAmount: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: 'bold',
+    color: Colors.error,
+    marginBottom: Spacing.sm,
+  },
+  anomalyExpected: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginBottom: Spacing.md,
+  },
+  severityBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: 4,
+  },
+  severityHigh: {
+    backgroundColor: Colors.error,
+  },
+  severityMedium: {
+    backgroundColor: '#F59E0B',
+  },
+  severityLow: {
+    backgroundColor: Colors.success,
+  },
+  severityText: {
+    color: Colors.white,
+    fontSize: Typography.sizes.xs,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  acknowledgeButton: {
+    backgroundColor: Colors.primary,
+    padding: Spacing.sm,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  acknowledgeButtonText: {
+    color: Colors.white,
+    fontWeight: '600',
+  },
+  // Recurring
+  recurringInfo: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginBottom: Spacing.md,
+    lineHeight: 20,
+  },
+  recurringCard: {
+    backgroundColor: Colors.white,
+    padding: Spacing.md,
+    borderRadius: 12,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  recurringHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  recurringCategory: {
+    fontSize: Typography.sizes.md,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  recurringAmount: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: Spacing.xs,
+  },
+  recurringDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginBottom: Spacing.xs,
+  },
+  recurringNext: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.success,
+  },
+  statusBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: 4,
+  },
+  statusActive: {
+    backgroundColor: Colors.success + '20',
+  },
+  statusInactive: {
+    backgroundColor: Colors.textLight + '20',
+  },
+  statusText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '600',
+  },
+  // Receipt Section
+  receiptSection: {
+    marginBottom: Spacing.lg,
+  },
+  receiptButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    padding: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderStyle: 'dashed',
+    gap: Spacing.md,
+  },
+  receiptButtonIcon: {
+    fontSize: 24,
+  },
+  receiptButtonText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.text,
+    flex: 1,
+  },
+  receiptHint: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textLight,
+    marginTop: Spacing.sm,
   },
 });

@@ -50,4 +50,98 @@ export const expenseService = {
   delete: async (businessId: string, expenseId: string): Promise<{ message: string }> => {
     return api.delete(`/businesses/${businessId}/expenses/${expenseId}`);
   },
+
+  // Upload receipt photo
+  uploadReceipt: async (businessId: string, expenseId: string, photoUri: string): Promise<{ receiptUrl: string }> => {
+    const formData = new FormData();
+    formData.append('receipt', {
+      uri: photoUri,
+      type: 'image/jpeg',
+      name: `receipt_${expenseId}.jpg`,
+    } as any);
+    
+    return api.post(`/businesses/${businessId}/expenses/${expenseId}/receipt`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  // ===== RECURRING EXPENSES =====
+  
+  // Get recurring expenses
+  getRecurring: async (businessId: string): Promise<{ 
+    recurring: Array<{
+      id: string;
+      category: string;
+      amount: number;
+      description?: string;
+      frequency: 'daily' | 'weekly' | 'monthly';
+      dayOfMonth?: number;
+      dayOfWeek?: number;
+      isActive: boolean;
+      nextRunDate: string;
+      createdAt: string;
+    }> 
+  }> => {
+    return api.get(`/businesses/${businessId}/expenses/recurring`);
+  },
+
+  // Create recurring expense
+  createRecurring: async (businessId: string, data: {
+    category: string;
+    amount: number;
+    description?: string;
+    frequency: 'daily' | 'weekly' | 'monthly';
+    dayOfMonth?: number;
+    dayOfWeek?: number;
+  }): Promise<{ recurring: any }> => {
+    return api.post(`/businesses/${businessId}/expenses/recurring`, data);
+  },
+
+  // Update recurring expense
+  updateRecurring: async (businessId: string, recurringId: string, data: Partial<{
+    category: string;
+    amount: number;
+    description: string;
+    frequency: 'daily' | 'weekly' | 'monthly';
+    dayOfMonth: number;
+    dayOfWeek: number;
+    isActive: boolean;
+  }>): Promise<{ recurring: any }> => {
+    return api.put(`/businesses/${businessId}/expenses/recurring/${recurringId}`, data);
+  },
+
+  // Delete recurring expense
+  deleteRecurring: async (businessId: string, recurringId: string): Promise<{ message: string }> => {
+    return api.delete(`/businesses/${businessId}/expenses/recurring/${recurringId}`);
+  },
+
+  // ===== ANOMALY DETECTION =====
+
+  // Get expense anomalies
+  getAnomalies: async (businessId: string, params?: { from?: string; to?: string }): Promise<{
+    anomalies: Array<{
+      id: string;
+      expenseId: string;
+      category: string;
+      amount: number;
+      expectedRange: { min: number; max: number };
+      severity: 'low' | 'medium' | 'high';
+      detectedAt: string;
+      isAcknowledged: boolean;
+    }>;
+    baseline: {
+      avgDaily: number;
+      avgByCategory: Record<string, number>;
+      periodDays: number;
+    };
+  }> => {
+    return api.get(`/businesses/${businessId}/expenses/anomalies`, { params });
+  },
+
+  // Acknowledge anomaly
+  acknowledgeAnomaly: async (businessId: string, anomalyId: string): Promise<{ message: string }> => {
+    return api.post(`/businesses/${businessId}/expenses/anomalies/${anomalyId}/acknowledge`);
+  },
 };

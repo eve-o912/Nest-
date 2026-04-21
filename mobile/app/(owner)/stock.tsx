@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Modal, A
 import { useState, useEffect, useCallback } from 'react';
 import { useBusinessStore } from '@/store/business.store';
 import { productService, type CreateProductRequest } from '@/services/product.service';
+import { stockService, type StockMovement, type StockDiscrepancy } from '@/services/stock.service';
 import { Colors, Typography, Spacing } from '@/styles/theme';
 import type { Product } from '@/types/models';
 
@@ -37,6 +38,15 @@ export default function StockScreen() {
   const [adjustReason, setAdjustReason] = useState('correction');
   const [adjustNotes, setAdjustNotes] = useState('');
 
+  // Physical count & movements states
+  const [isCountModalVisible, setIsCountModalVisible] = useState(false);
+  const [countQuantities, setCountQuantities] = useState<Record<string, number>>({});
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [discrepancies, setDiscrepancies] = useState<StockDiscrepancy[]>([]);
+  const [shrinkageRate, setShrinkageRate] = useState<number | null>(null);
+  const [showMovements, setShowMovements] = useState(false);
+  const [showShrinkage, setShowShrinkage] = useState(false);
+
   // Load products
   const loadProducts = useCallback(async () => {
     if (!currentBusiness?.id) return;
@@ -59,9 +69,44 @@ export default function StockScreen() {
     }
   }, [currentBusiness?.id]);
 
+  // Load stock movements
+  const loadStockMovements = useCallback(async () => {
+    if (!currentBusiness?.id) return;
+    try {
+      const response = await stockService.getMovements(currentBusiness.id, { limit: 50 });
+      setStockMovements(response.movements || []);
+    } catch (err: any) {
+      console.error('Failed to load stock movements:', err);
+    }
+  }, [currentBusiness?.id]);
+
+  // Load discrepancies
+  const loadDiscrepancies = useCallback(async () => {
+    if (!currentBusiness?.id) return;
+    try {
+      const response = await stockService.getDiscrepancies(currentBusiness.id, { status: 'open' });
+      setDiscrepancies(response.discrepancies || []);
+    } catch (err: any) {
+      console.error('Failed to load discrepancies:', err);
+    }
+  }, [currentBusiness?.id]);
+
+  // Load shrinkage
+  const loadShrinkage = useCallback(async () => {
+    if (!currentBusiness?.id) return;
+    try {
+      const response = await stockService.getShrinkage(currentBusiness.id);
+      setShrinkageRate(response.shrinkageRate);
+    } catch (err: any) {
+      console.error('Failed to load shrinkage:', err);
+    }
+  }, [currentBusiness?.id]);
+
   useEffect(() => {
     loadProducts();
-  }, [loadProducts]);
+    loadDiscrepancies();
+    loadShrinkage();
+  }, [loadProducts, loadDiscrepancies, loadShrinkage]);
 
   // Filter products based on search
   const filteredProducts = searchQuery
@@ -169,6 +214,46 @@ export default function StockScreen() {
     }
   };
 
+  // Handle physical count with discrepancy detection
+  const handlePhysicalCount = async () => {
+    if (!currentBusiness?.id) return;
+    
+    const countEntries = Object.entries(countQuantities).filter(([_, qty]) => !isNaN(qty));
+    if (countEntries.length === 0) {
+      Alert.alert('Error', 'Please enter quantities for at least one product');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const counts = countEntries.map(([productId, actualQty]) => ({
+        productId,
+        actualQty,
+      }));
+      
+      const response = await stockService.submitCount(currentBusiness.id, { counts });
+      
+      setIsCountModalVisible(false);
+      setCountQuantities({});
+      loadProducts();
+      loadDiscrepancies();
+      
+      // Show summary of discrepancies found
+      if (response.summary.withVariance > 0) {
+        Alert.alert(
+          'Count Complete',
+          `Found ${response.summary.withVariance} discrepancies totaling ${response.summary.totalGapValue} KES in gap value.`
+        );
+      } else {
+        Alert.alert('Count Complete', 'No discrepancies found. Stock matches expected quantities.');
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to submit stock count');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const formatCurrency = (amount: number) => `KES ${amount.toLocaleString()}`;
 
   const renderProductItem = ({ item }: { item: Product }) => (
@@ -248,6 +333,64 @@ export default function StockScreen() {
           </Text>
         </View>
       )}
+
+      {/* Discrepancies Alert */}
+      {discrepancies.length > 0 && (
+        <TouchableOpacity 
+          style={[styles.alertBanner, styles.discrepancyBanner]}
+          onPress={() => setShowShrinkage(true)}
+        >
+          <Text style={[styles.alertText, styles.discrepancyText]}>
+            🚨 {discrepancies.length} stock discrepanc{discrepancies.length > 1 ? 'ies' : 'y'} detected
+          </Text>
+          <Text style={styles.discrepancySubtext}>
+            Tap to investigate shrinkage
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Shrinkage Analytics Card */}
+      {shrinkageRate !== null && (
+        <View style={styles.shrinkageCard}>
+          <View style={styles.shrinkageRow}>
+            <Text style={styles.shrinkageLabel}>Weekly Shrinkage Rate</Text>
+            <Text style={[
+              styles.shrinkageValue,
+              shrinkageRate > 5 ? styles.shrinkageHigh : shrinkageRate > 2 ? styles.shrinkageMedium : styles.shrinkageLow
+            ]}>
+              {shrinkageRate.toFixed(1)}%
+            </Text>
+          </View>
+          <Text style={styles.shrinkageSubtext}>
+            {shrinkageRate > 5 
+              ? 'High shrinkage affecting passport score. Review discrepancies.' 
+              : shrinkageRate > 2 
+                ? 'Moderate shrinkage. Monitor stock counts.' 
+                : 'Good stock control. Keep it up!'}
+          </Text>
+        </View>
+      )}
+
+      {/* Quick Actions */}
+      <View style={styles.quickActions}>
+        <TouchableOpacity 
+          style={styles.actionChip}
+          onPress={() => setIsCountModalVisible(true)}
+        >
+          <Text style={styles.actionChipIcon}>📋</Text>
+          <Text style={styles.actionChipText}>Physical Count</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.actionChip}
+          onPress={() => {
+            loadStockMovements();
+            setShowMovements(true);
+          }}
+        >
+          <Text style={styles.actionChipIcon}>📈</Text>
+          <Text style={styles.actionChipText}>Movements</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
@@ -532,6 +675,118 @@ export default function StockScreen() {
                 )}
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Stock Movements Modal */}
+      <Modal
+        visible={showMovements}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowMovements(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Stock Movements</Text>
+            <TouchableOpacity onPress={() => setShowMovements(false)}>
+              <Text style={styles.closeButton}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <FlatList
+            data={stockMovements}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.movementsList}
+            renderItem={({ item }) => (
+              <View style={styles.movementRow}>
+                <View style={styles.movementLeft}>
+                  <Text style={styles.movementProduct}>{item.productName}</Text>
+                  <Text style={styles.movementType}>{item.type}</Text>
+                  <Text style={styles.movementDate}>
+                    {new Date(item.createdAt).toLocaleDateString('en-KE')}
+                  </Text>
+                </View>
+                <View style={styles.movementRight}>
+                  <Text style={[
+                    styles.movementQty,
+                    item.quantity > 0 ? styles.movementIn : styles.movementOut
+                  ]}>
+                    {item.quantity > 0 ? '+' : ''}{item.quantity}
+                  </Text>
+                  <Text style={styles.movementBalance}>
+                    {item.previousQty} → {item.newQty}
+                  </Text>
+                </View>
+              </View>
+            )}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>No stock movements recorded</Text>
+            }
+          />
+        </View>
+      </Modal>
+
+      {/* Physical Count Modal */}
+      <Modal
+        visible={isCountModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsCountModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Physical Stock Count</Text>
+            <TouchableOpacity onPress={() => setIsCountModalVisible(false)}>
+              <Text style={styles.closeButton}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.countContainer}>
+            <Text style={styles.countInstructions}>
+              Enter the actual quantity for each product. Nest will compare with expected stock and generate discrepancies for any variances.
+            </Text>
+            
+            <FlatList
+              data={products}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <View style={styles.countRow}>
+                  <View style={styles.countProductInfo}>
+                    <Text style={styles.countProductName}>{item.name}</Text>
+                    <Text style={styles.countExpected}>Expected: {item.stockQty} {item.unit || 'pcs'}</Text>
+                  </View>
+                  <TextInput
+                    style={styles.countInput}
+                    keyboardType="number-pad"
+                    placeholder="Qty"
+                    value={countQuantities[item.id]?.toString() || ''}
+                    onChangeText={(text) => {
+                      const qty = parseInt(text, 10);
+                      setCountQuantities(prev => ({
+                        ...prev,
+                        [item.id]: isNaN(qty) ? 0 : qty
+                      }));
+                    }}
+                  />
+                </View>
+              )}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>No products to count</Text>
+              }
+            />
+            
+            <TouchableOpacity 
+              style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+              onPress={handlePhysicalCount}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color={Colors.white} size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>Submit Count & Check Discrepancies</Text>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -889,5 +1144,181 @@ const styles = StyleSheet.create({
   },
   reasonTextActive: {
     color: Colors.white,
+  },
+  // Discrepancies & Shrinkage styles
+  discrepancyBanner: {
+    backgroundColor: Colors.error + '20',
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.error,
+  },
+  discrepancyText: {
+    color: Colors.error,
+    fontWeight: 'bold',
+  },
+  discrepancySubtext: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginTop: Spacing.xs,
+  },
+  shrinkageCard: {
+    backgroundColor: Colors.white,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+    padding: Spacing.md,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  shrinkageRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  shrinkageLabel: {
+    fontSize: Typography.sizes.md,
+    color: Colors.text,
+    fontWeight: '500',
+  },
+  shrinkageValue: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: 'bold',
+  },
+  shrinkageHigh: {
+    color: Colors.error,
+  },
+  shrinkageMedium: {
+    color: '#F59E0B', // amber
+  },
+  shrinkageLow: {
+    color: Colors.success,
+  },
+  shrinkageSubtext: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+  },
+  // Quick Actions
+  quickActions: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  actionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  actionChipIcon: {
+    fontSize: 16,
+  },
+  actionChipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.text,
+    fontWeight: '500',
+  },
+  // Physical Count Modal styles
+  countContainer: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  countInstructions: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginBottom: Spacing.md,
+    lineHeight: 20,
+  },
+  countRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    padding: Spacing.md,
+    borderRadius: 8,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  countProductInfo: {
+    flex: 1,
+  },
+  countProductName: {
+    fontSize: Typography.sizes.md,
+    fontWeight: '500',
+    color: Colors.text,
+  },
+  countExpected: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginTop: Spacing.xs,
+  },
+  countInput: {
+    width: 80,
+    backgroundColor: Colors.background,
+    borderRadius: 8,
+    padding: Spacing.sm,
+    fontSize: Typography.sizes.md,
+    color: Colors.text,
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  // Stock Movements styles
+  movementsList: {
+    padding: Spacing.lg,
+  },
+  movementRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    padding: Spacing.md,
+    borderRadius: 8,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  movementLeft: {
+    flex: 1,
+  },
+  movementProduct: {
+    fontSize: Typography.sizes.md,
+    fontWeight: '500',
+    color: Colors.text,
+  },
+  movementType: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    textTransform: 'capitalize',
+    marginTop: Spacing.xs,
+  },
+  movementDate: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textLight,
+    marginTop: Spacing.xs,
+  },
+  movementRight: {
+    alignItems: 'flex-end',
+  },
+  movementQty: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: 'bold',
+  },
+  movementIn: {
+    color: Colors.success,
+  },
+  movementOut: {
+    color: Colors.error,
+  },
+  movementBalance: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginTop: Spacing.xs,
   },
 });

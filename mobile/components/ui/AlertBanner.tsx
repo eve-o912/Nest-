@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, typography, spacing, radius } from '@/constants/theme';
 
-type AlertSeverity = 'info' | 'warning' | 'error' | 'success';
+type AlertSeverity = 'info' | 'warning' | 'error' | 'success' | 'urgent';
 
 interface AlertBannerProps {
   title: string;
@@ -28,6 +28,7 @@ export function AlertBanner({
       case 'warning':
         return colors.amberDim;
       case 'error':
+      case 'urgent':
         return colors.redDim;
       default:
         return colors.blueDim;
@@ -41,6 +42,7 @@ export function AlertBanner({
       case 'warning':
         return colors.amber;
       case 'error':
+      case 'urgent':
         return colors.red;
       default:
         return colors.blue;
@@ -54,6 +56,7 @@ export function AlertBanner({
       case 'warning':
         return '!';
       case 'error':
+      case 'urgent':
         return '✕';
       default:
         return 'ℹ';
