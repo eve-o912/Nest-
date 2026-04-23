@@ -1,9 +1,15 @@
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
 
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+})
+
 export const metadata: Metadata = {
-  title: 'Nest Receipt',
-  description: 'Digital receipt from Nest - Financial OS for businesses',
+  title: 'Nest - Financial Operating System',
+  description: 'Turn your daily sales into a financial identity operating system',
 }
 
 export default function RootLayout({
@@ -13,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-bg min-h-screen">
+      <body className={`${inter.variable} font-sans bg-bg min-h-screen`}>
         {children}
       </body>
     </html>
