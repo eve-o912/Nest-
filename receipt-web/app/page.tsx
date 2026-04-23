@@ -1,396 +1,217 @@
 'use client'
 
-import Link from 'next/link'
-
-// SVG Icons
-const ChevronDown = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-)
-
-const Check = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-  </svg>
-)
-
-const Play = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-    <path d="M8 5v14l11-7z" />
-  </svg>
-)
-
-const ArrowRight = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-  </svg>
-)
-
-const Zap = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-  </svg>
-)
-
-const Shield = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-  </svg>
-)
-
-// Phone Card Component
-interface PhoneCardProps {
-  title: string
-  value: string
-  subtitle: string
-  color: string
-  icon: React.ReactNode
-  delay?: number
-}
-
-function PhoneCard({ title, value, subtitle, color, icon, delay = 0 }: PhoneCardProps) {
-  return (
-    <div 
-      className="glass-card p-4 mb-3 transform transition-all duration-500 hover:scale-105"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-sub font-medium">{title}</span>
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color}`}>
-          {icon}
-        </div>
-      </div>
-      <div className="text-2xl font-bold text-white mb-1">{value}</div>
-      <div className="text-xs text-sub">{subtitle}</div>
-    </div>
-  )
-}
-
-// 3D Floating Element
-function FloatingElement({ 
-  children, 
-  className = "", 
-  delay = 0,
-  style = {}
-}: { 
-  children: React.ReactNode
-  className?: string
-  delay?: number
-  style?: React.CSSProperties
-}) {
-  return (
-    <div 
-      className={`absolute ${className}`}
-      style={{
-        animation: `float 6s ease-in-out ${delay}s infinite`,
-        ...style
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-// Hexagon shape
-function Hexagon({ className = "", color = "rgba(99, 102, 241, 0.3)" }: { className?: string, color?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 100 100" fill={color}>
-      <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" />
-    </svg>
-  )
-}
-
-// Gradient Orb
-function GradientOrb({ className = "", color = "from-blue-500 to-purple-500" }: { className?: string, color?: string }) {
-  return (
-    <div className={`absolute rounded-full blur-3xl opacity-40 ${className} bg-gradient-to-br ${color}`} />
-  )
-}
-
 export default function Home() {
-  const navItems = [
-    { label: 'Glasrnorph', hasDropdown: true },
-    { label: 'Outtorte', hasDropdown: true },
-    { label: 'Gradient', hasDropdown: true },
-    { label: 'Shioe', hasDropdown: false },
-    { label: 'Atrow', hasDropdown: false },
-  ]
-
-  const checkItems = [
-    'Yeriany art tmeling',
-    'Animated Groutt stums',
-  ]
-
-  const trustItems = [
-    { icon: <Zap className="w-4 h-4" />, label: 'Fast' },
-    { icon: <Shield className="w-4 h-4" />, label: 'Feature' },
-    { icon: <Check className="w-4 h-4" />, label: 'Trust tring Foolis' },
-  ]
-
   return (
-    <main className="min-h-screen bg-bg relative overflow-hidden font-sans">
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <GradientOrb className="w-[800px] h-[800px] -top-40 -left-40" color="from-blue-600 via-purple-600 to-transparent" />
-        <GradientOrb className="w-[600px] h-[600px] top-1/2 right-0" color="from-cyan-500 via-blue-500 to-transparent" />
-        <GradientOrb className="w-[400px] h-[400px] bottom-0 left-1/4" color="from-purple-500 via-pink-500 to-transparent" />
-        
-        {/* Grid Pattern */}
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{
+    <>
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+
+        :root {
+          --accent-blue: #2563ff;
+          --accent-cyan: #00d4ff;
+          --accent-orange: #ff6b1a;
+          --accent-gold: #ffb347;
+          --text-muted: #8a9bc4;
+          --glass: rgba(255,255,255,0.05);
+        }
+
+        .homepage { font-family: 'DM Sans', sans-serif; }
+        .font-syne { font-family: 'Syne', sans-serif; }
+
+        @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(22px,-28px)} }
+        @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-14px,18px)} }
+        @keyframes drift3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(10px,-14px)} }
+        @keyframes ringPulse { 0%,100%{opacity:0.35} 50%{opacity:0.08} }
+        @keyframes spinGem { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes floatPhone { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-18px) rotate(-3deg)} }
+        @keyframes growBar { from{width:0} }
+        @keyframes fc1Float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        @keyframes fc2Float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(10px)} }
+        @keyframes pt1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-14px,9px)} }
+        @keyframes pt2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(10px,-18px)} }
+        @keyframes pt3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-8px,12px)} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+
+      <main className="homepage min-h-screen bg-[#050a1e] text-white overflow-x-hidden">
+        {/* Background Layer */}
+        <div className="fixed inset-0 z-0 overflow-hidden">
+          <div className="absolute inset-0" style={{
+            background: `
+              radial-gradient(ellipse 80% 60% at 18% 50%, rgba(13,32,96,0.95) 0%, transparent 70%),
+              radial-gradient(ellipse 50% 50% at 78% 18%, rgba(37,99,255,0.18) 0%, transparent 60%),
+              radial-gradient(ellipse 40% 40% at 68% 80%, rgba(0,212,255,0.09) 0%, transparent 60%)
+            `
+          }} />
+          <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: `
-              linear-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(99, 102, 241, 0.1) 1px, transparent 1px)
+              linear-gradient(rgba(37,99,255,0.04) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(37,99,255,0.04) 1px, transparent 1px)
             `,
             backgroundSize: '60px 60px'
-          }}
-        />
-      </div>
+          }} />
+          <div className="absolute w-80 h-80 rounded-full blur-[70px] opacity-45 top-[28%] -left-[6%]" style={{ background: 'rgba(37,99,255,0.35)', animation: 'drift1 8s ease-in-out infinite' }} />
+          <div className="absolute w-56 h-56 rounded-full blur-[70px] opacity-45 top-[58%] left-[38%]" style={{ background: 'rgba(0,212,255,0.22)', animation: 'drift2 10s ease-in-out infinite' }} />
+          <div className="absolute w-40 h-40 rounded-full blur-[70px] opacity-45 bottom-[8%] right-[18%]" style={{ background: 'rgba(255,107,26,0.18)', animation: 'drift3 7s ease-in-out infinite' }} />
+        </div>
 
-      {/* Navigation */}
-      <nav className="relative z-50 px-6 lg:px-12 py-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
+        {/* Navigation */}
+        <nav className="relative z-[100] flex items-center justify-between px-8 lg:px-16 py-5 border-b border-white/[0.07] backdrop-blur-xl bg-[rgba(3,5,15,0.45)]">
+          <div className="flex items-center gap-2.5 font-syne font-extrabold text-[22px]">
+            <div className="w-[34px] h-[34px] bg-gradient-to-br from-[#2563ff] to-[#00d4ff] rounded-[9px] flex items-center justify-center text-[17px]">
+              ⚡
             </div>
-            <span className="text-xl font-bold text-white">Nest</span>
-          </Link>
-
-          {/* Nav Items */}
-          <div className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
-              <button 
-                key={item.label}
-                className="flex items-center gap-1 text-sm text-sub hover:text-white transition-colors"
-              >
-                {item.label}
-                {item.hasDropdown && <ChevronDown className="w-3 h-3" />}
+            Nest
+          </div>
+          <div className="hidden md:flex items-center gap-1">
+            {['Glasmorph', 'Outlorite', 'Gradient'].map((item) => (
+              <button key={item} className="flex items-center gap-1 px-4 py-2 text-sm text-white/[0.68] rounded-lg transition-all hover:text-white hover:bg-white/5 cursor-pointer">
+                {item} <span className="text-[9px] opacity-55">▾</span>
+              </button>
+            ))}
+            {['Shipe', 'Atrow'].map((item) => (
+              <button key={item} className="px-4 py-2 text-sm text-white/[0.68] rounded-lg transition-all hover:text-white hover:bg-white/5 cursor-pointer">
+                {item}
               </button>
             ))}
           </div>
-
-          {/* CTA Button */}
-          <button className="glass-button text-white text-sm">
-            How It workss
+          <button className="px-6 py-2.5 border border-white/[0.28] rounded-full text-sm text-white transition-all hover:bg-white/[0.08] hover:border-white/[0.55]">
+            How it works
           </button>
-        </div>
-      </nav>
+        </nav>
 
-      {/* Hero Section */}
-      <section className="relative z-10 px-6 lg:px-12 pt-12 pb-24">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left Content */}
-            <div className="space-y-8">
-              <h1 className="text-5xl lg:text-6xl font-bold text-white leading-tight">
-                Turn Your Daily Sales Into{' '}
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-                  Financial Identity
-                </span>{' '}
-                Operating System
-              </h1>
-              
-              <p className="text-lg text-sub max-w-lg">
-                Get you get rrders sreert bushop of business sererien; tor nlb&apos;s apus or financial ere next.
-              </p>
-
-              {/* Check Items */}
-              <div className="flex flex-wrap gap-6">
-                {checkItems.map((item) => (
-                  <div key={item} className="flex items-center gap-2 text-sm text-sub">
-                    <div className="w-5 h-5 rounded bg-white/10 flex items-center justify-center">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    {item}
-                  </div>
-                ))}
-              </div>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-wrap items-center gap-4">
-                <button className="px-8 py-4 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold text-sm hover:opacity-90 transition-opacity flex items-center gap-2">
-                  Start Free
-                </button>
-                <button className="glass-button flex items-center gap-2">
-                  <Play className="w-4 h-4" />
-                  How it work
-                </button>
-              </div>
-
-              {/* Trust Items */}
-              <div className="flex items-center gap-6 pt-4">
-                {trustItems.map((item) => (
-                  <div key={item.label} className="flex items-center gap-2 text-sm text-sub">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                      {item.icon}
-                    </div>
-                    {item.label}
-                  </div>
-                ))}
-              </div>
+        {/* Hero */}
+        <section className="relative z-10 grid lg:grid-cols-2 items-center min-h-[calc(100vh-73px)] px-8 lg:px-16 py-12 lg:py-20 gap-12">
+          {/* Left */}
+          <div className="max-w-[620px]">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[rgba(37,99,255,0.14)] border border-[rgba(37,99,255,0.32)] text-xs text-[#00d4ff] font-medium tracking-wider mb-7" style={{ animation: 'fadeUp 0.6s ease both' }}>
+              <span className="w-1.5 h-1.5 bg-[#00d4ff] rounded-full animate-[pulse_2s_ease_infinite]" />
+              AI-Powered Sales Intelligence
             </div>
 
-            {/* Right Content - Phone Mockups */}
-            <div className="relative h-[600px] lg:h-[700px]">
-              {/* Floating 3D Elements */}
-              <FloatingElement className="top-10 left-0" delay={0}>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                  </svg>
+            <h1 className="font-syne font-extrabold text-[clamp(34px,3.8vw,54px)] leading-[1.1] tracking-tight mb-6" style={{ animation: 'fadeUp 0.6s 0.1s ease both' }}>
+              Turn Your Daily Sales Into{' '}
+              <span className="bg-gradient-to-br from-[#00d4ff] to-[#2563ff] bg-clip-text text-transparent">Brand Identity</span>{' '}
+              Operating System
+            </h1>
+
+            <p className="text-[15.5px] leading-[1.75] text-[#8a9bc4] max-w-[470px] mb-8" style={{ animation: 'fadeUp 0.6s 0.2s ease both' }}>
+              Get instant insights and automate your business operations. Built for entrepreneurs, agencies, and financial teams ready for what&apos;s next.
+            </p>
+
+            <div className="flex flex-wrap gap-5 mb-10" style={{ animation: 'fadeUp 0.6s 0.3s ease both' }}>
+              {['Yearly & monthly plans', 'Animated growth charts'].map((item) => (
+                <div key={item} className="flex items-center gap-2.5 text-[13px] text-white/[0.72]">
+                  <div className="w-5 h-5 rounded-md bg-[rgba(37,99,255,0.2)] border border-[rgba(37,99,255,0.42)] flex items-center justify-center text-[11px]">✓</div>
+                  {item}
                 </div>
-              </FloatingElement>
+              ))}
+            </div>
 
-              <FloatingElement className="top-20 right-10" delay={1}>
-                <Hexagon className="w-12 h-12" color="rgba(99, 102, 241, 0.4)" />
-              </FloatingElement>
+            <div className="flex flex-wrap gap-3.5 items-center mb-12" style={{ animation: 'fadeUp 0.6s 0.4s ease both' }}>
+              <button className="px-8 py-3.5 rounded-full bg-gradient-to-br from-[#ff6b1a] to-[#ffb347] text-white font-semibold text-[15px] shadow-[0_8px_32px_rgba(255,107,26,0.38)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_40px_rgba(255,107,26,0.52)]">
+                Start Free →
+              </button>
+              <button className="px-7 py-3.5 rounded-full border border-white/[0.22] bg-transparent text-[15px] transition-all hover:bg-white/5 hover:border-white/[0.42]">
+                How it works
+              </button>
+            </div>
 
-              <FloatingElement className="bottom-40 left-10" delay={2}>
-                <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20" />
-              </FloatingElement>
-
-              <FloatingElement className="top-1/3 right-0" delay={0.5}>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-400 to-purple-400" />
-              </FloatingElement>
-
-              {/* Phone 1 - Back (Left) */}
-              <div 
-                className="absolute left-0 top-1/2 -translate-y-1/2 w-64 transform -rotate-12 scale-90 opacity-80"
-                style={{ animation: 'float 8s ease-in-out infinite' }}
-              >
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-b from-blue-500/20 to-purple-500/20 rounded-[40px] blur-xl" />
-                  <div className="relative bg-gradient-to-b from-blue-600 to-cyan-400 rounded-[40px] p-4 shadow-2xl">
-                    <div className="bg-white/10 backdrop-blur-md rounded-[32px] p-4">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-pink-400 to-orange-400" />
-                        <div className="text-xs text-white font-medium">Rearr Buttth</div>
-                      </div>
-                      <div className="text-3xl font-bold text-white mb-1">1350%</div>
-                      <div className="text-xs text-white/70 mb-4">Cteantiny</div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-2xl font-bold text-white">254</div>
-                        <div className="text-xs text-white/70">/30 Order</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <div className="flex items-center gap-3.5" style={{ animation: 'fadeUp 0.6s 0.5s ease both' }}>
+              <span className="text-[13px] text-[#8a9bc4]">Trusted by</span>
+              <div className="flex gap-2.5 items-center">
+                {['Garage', 'Feature', '🔒 Trust Tools'].map((tag, i) => (
+                  <span key={tag} className="text-xs px-3 py-1 rounded-full border border-white/[0.11] bg-white/[0.04] text-white/[0.58]">
+                    {tag}
+                  </span>
+                ))}
               </div>
-
-              {/* Phone 2 - Main (Center) */}
-              <div 
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 z-20"
-                style={{ animation: 'float 6s ease-in-out 1s infinite' }}
-              >
-                <div className="relative">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/30 via-purple-500/30 to-pink-500/30 rounded-[50px] blur-2xl" />
-                  <div className="relative bg-gradient-to-b from-white via-gray-100 to-gray-300 rounded-[48px] p-3 shadow-2xl">
-                    {/* Notch */}
-                    <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-10" />
-                    
-                    <div className="bg-gradient-to-b from-slate-100 to-white rounded-[40px] overflow-hidden pt-8">
-                      {/* Status Bar */}
-                      <div className="flex items-center justify-between px-4 py-2 text-xs">
-                        <span className="font-medium">9:41</span>
-                        <div className="flex items-center gap-1">
-                          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-pink-400 to-orange-400" />
-                        </div>
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-4">
-                        <div className="text-xs text-gray-500 mb-1">S S6Mers ratiics</div>
-                        
-                        {/* Main Card */}
-                        <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-4 mb-3 text-white">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs opacity-80">Storayc-PriBat</span>
-                            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-                              <ArrowRight className="w-3 h-3" />
-                            </div>
-                          </div>
-                          <div className="text-3xl font-bold mb-1">153 %</div>
-                          <div className="text-xs opacity-80">New s1ob</div>
-                        </div>
-
-                        {/* Secondary Stats */}
-                        <div className="flex gap-2 mb-3">
-                          <div className="flex-1 bg-white rounded-xl p-2 shadow-sm">
-                            <div className="text-xs text-gray-400 mb-1">Ar Pedy</div>
-                            <div className="text-sm font-semibold">Aff Pldis</div>
-                          </div>
-                          <div className="flex-1 bg-white rounded-xl p-2 shadow-sm">
-                            <div className="text-xs text-gray-400 mb-1">Freedy oft</div>
-                            <div className="text-sm font-semibold">Quilf Rue</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Phone 3 - Right */}
-              <div 
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-8 w-64 transform rotate-12 scale-90 opacity-80 z-10"
-                style={{ animation: 'float 7s ease-in-out 0.5s infinite' }}
-              >
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-b from-pink-500/20 to-purple-500/20 rounded-[40px] blur-xl" />
-                  <div className="relative bg-gradient-to-b from-pink-500 to-green-400 rounded-[40px] p-4 shadow-2xl">
-                    <div className="bg-white/10 backdrop-blur-md rounded-[32px] p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="text-xs text-white font-medium">Fleyuing Dora</div>
-                        <div className="w-6 h-6 rounded-full bg-white/20" />
-                      </div>
-                      <div className="text-3xl font-bold text-white mb-4">24754M</div>
-                      
-                      {/* Circular Chart */}
-                      <div className="relative w-24 h-24 mx-auto">
-                        <svg className="w-full h-full -rotate-90">
-                          <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="8" />
-                          <circle cx="48" cy="48" r="40" fill="none" stroke="white" strokeWidth="8" strokeDasharray="200" strokeDashoffset="50" strokeLinecap="round" />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-xs text-white font-bold">
-                            at
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating particles */}
-              <FloatingElement className="bottom-20 left-1/4" delay={1.5}>
-                <div className="w-6 h-6 rounded-full bg-purple-500/30 blur-sm" />
-              </FloatingElement>
-              <FloatingElement className="top-32 right-1/4" delay={2.5}>
-                <div className="w-4 h-4 rounded-full bg-blue-400/40" />
-              </FloatingElement>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* CSS for animations */}
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-20px) rotate(2deg);
-          }
-        }
-      `}</style>
-    </main>
+          {/* Right - Phone & Floats */}
+          <div className="relative flex justify-center items-center h-[600px]" style={{ animation: 'fadeUp 0.7s 0.2s ease both' }}>
+            {/* Glow Rings */}
+            <div className="absolute w-[380px] h-[380px] rounded-full border border-[rgba(37,99,255,0.18)] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-[ringPulse_4s_ease-in-out_infinite]" />
+            <div className="absolute w-[510px] h-[510px] rounded-full border border-[rgba(37,99,255,0.18)] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-[ringPulse_4s_1.5s_ease-in-out_infinite]" />
+
+            {/* Spinning Gem */}
+            <div 
+              className="absolute top-[22px] right-[55px] w-[66px] h-[66px] opacity-90 animate-[spinGem_22s_linear_infinite]"
+              style={{ 
+                background: 'linear-gradient(135deg, #a855f7, #2563ff, #00d4ff)',
+                clipPath: 'polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%)',
+                filter: 'drop-shadow(0 0 18px rgba(168,85,247,0.65))'
+              }}
+            />
+
+            {/* Float Card Top Right */}
+            <div className="absolute -right-5 top-14 w-[168px] z-10 p-4 rounded-2xl bg-[rgba(10,15,45,0.88)] backdrop-blur-xl border border-white/10 animate-[fc1Float_7s_ease-in-out_infinite]">
+              <div className="text-[9px] text-[#8a9bc4] mb-1">Sales Analytics</div>
+              <div className="font-syne text-[19px] font-extrabold bg-gradient-to-br from-[#ff6b1a] to-[#ffb347] bg-clip-text text-transparent">+1,350%</div>
+              <div className="text-[9px] text-white/[0.38] mt-0.5">Revenue growth</div>
+              <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[9px] mt-1.5 bg-[rgba(52,211,153,0.14)] text-[#34d399]">↑ 24.5% this month</div>
+            </div>
+
+            {/* Phone */}
+            <div className="relative z-[5] animate-[floatPhone_6s_ease-in-out_infinite]">
+              <div className="w-[226px] h-[465px] bg-gradient-to-br from-[#1a1f3e] to-[#0d1128] rounded-[36px] border border-white/[0.14] shadow-[0_40px_100px_rgba(0,0,0,0.75),inset_0_1px_0_rgba(255,255,255,0.1)] overflow-hidden relative">
+                <div className="w-[78px] h-[22px] bg-[#07091a] rounded-b-2xl mx-auto mb-2.5" />
+                <div className="px-3">
+                  <div className="flex justify-between items-center mb-2.5 text-[9.5px] text-white/[0.45]">
+                    <span>Sales Dashboard</span>
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#ff6b1a] to-[#ffb347]" />
+                  </div>
+
+                  <div className="rounded-[13px] p-2.5 mb-2 bg-gradient-to-br from-[rgba(37,99,255,0.28)] to-[rgba(0,212,255,0.13)] border border-[rgba(37,99,255,0.3)]">
+                    <div className="text-[9px] text-white/[0.45] mb-0.5">New Subscribers</div>
+                    <div className="font-syne text-[23px] font-extrabold bg-gradient-to-br from-[#ff6b1a] to-[#ffb347] bg-clip-text text-transparent">153%</div>
+                    <div className="h-1 bg-white/[0.09] rounded-sm mt-1.5 overflow-hidden">
+                      <div className="h-full rounded-sm bg-gradient-to-r from-[#ff6b1a] to-[#ffb347] w-3/4 animate-[growBar_2s_1s_ease_both]" />
+                    </div>
+                  </div>
+
+                  <div className="rounded-[13px] p-2.5 mb-2 bg-gradient-to-br from-[rgba(0,212,255,0.2)] to-[rgba(37,99,255,0.1)] border border-[rgba(0,212,255,0.25)]">
+                    <div className="text-[9px] text-white/[0.45] mb-0.5">Flying Data</div>
+                    <div className="font-syne text-[23px] font-extrabold bg-gradient-to-br from-[#00d4ff] to-[#2563ff] bg-clip-text text-transparent">2,475K</div>
+                    <div className="h-1 bg-white/[0.09] rounded-sm mt-1.5 overflow-hidden">
+                      <div className="h-full rounded-sm bg-gradient-to-r from-[#2563ff] to-[#00d4ff] w-[62%] animate-[growBar_2s_1.2s_ease_both]" />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1 mt-2">
+                    {[
+                      { dot: '#34d399', label: 'All Clients', val: '71%' },
+                      { dot: '#a855f7', label: 'Revenue', val: '88%' },
+                      { dot: '#ff6b1a', label: 'Conversions', val: '54%' }
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-[9px] text-white/[0.55]">
+                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: item.dot }} />
+                        {item.label}
+                        <span className="ml-auto font-semibold text-white">{item.val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Float Card Bottom Left */}
+            <div className="absolute -left-7 bottom-24 w-[158px] z-10 p-4 rounded-2xl bg-[rgba(10,15,45,0.88)] backdrop-blur-xl border border-white/10 animate-[fc2Float_8s_1s_ease-in-out_infinite]">
+              <div className="text-[9px] text-[#8a9bc4] mb-1">Source Performance</div>
+              <div className="font-syne text-[19px] font-extrabold text-[#34d399]">$36,512</div>
+              <div className="text-[9px] text-white/[0.38] mt-0.5">Monthly recurring</div>
+              <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[9px] mt-1.5 bg-[rgba(52,211,153,0.14)] text-[#34d399]">↑ Active leads</div>
+            </div>
+
+            {/* Particles */}
+            <div className="absolute w-2 h-2 rounded-full bg-[#ff6b1a] top-[14%] left-[54%] opacity-85 animate-[pt1_5s_ease-in-out_infinite]" />
+            <div className="absolute w-1.5 h-1.5 rounded-full bg-[#a855f7] top-[73%] left-[28%] opacity-60 animate-[pt2_7s_ease-in-out_infinite]" />
+            <div className="absolute w-1.5 h-1.5 rounded-full bg-[#00d4ff] top-[38%] right-[14%] opacity-72 animate-[pt3_6s_ease-in-out_infinite]" />
+          </div>
+        </section>
+      </main>
+    </>
   )
 }
